@@ -206,31 +206,39 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     def maxValue(gameState, agentIndex, currentDepth):
       v = (float("-inf"), Directions.STOP)
       nextAgent = (agentIndex + 1)
+
       for action in gameState.getLegalActions(agentIndex):
         nextGameState = gameState.generateSuccessor(agentIndex, action)
         newVal = minimaxValue(nextGameState, nextAgent, currentDepth)
+
         if newVal > v[0]:
           v = (newVal, action)
+
       return v
 
     def expectimaxValue(gameState, agentIndex, currentDepth):
       v = [0.0]
       nextAgent = (agentIndex + 1)
+
       if nextAgent == gameState.getNumAgents():
         nextAgent = 0
         currentDepth -= 1
+
       for action in gameState.getLegalActions(agentIndex):
         nextGameState = gameState.generateSuccessor(agentIndex, action)
         newVal = minimaxValue(nextGameState, nextAgent, currentDepth)
         v.append(newVal)
       v.pop(0)
+
       return sum(v) / len(v)
 
     def minimaxValue(gameState, agentIndex, currentDepth):
       if gameState.isLose() or gameState.isWin():
         return gameState.getScore()
+
       if currentDepth <= 0:
         return self.evaluationFunction(gameState)
+
       if agentIndex == 0:
         return maxValue(gameState, agentIndex, currentDepth)[0]
       else:
@@ -261,18 +269,21 @@ def betterEvaluationFunction(currentGameState: GameState) -> float:
   huntingGhosts = []
   scaredGhosts = []
   scaredTimes = []
+
   for ghost in ghostStates:
     if ghost.scaredTimer:
       scaredTimes.append(ghost.scaredTimer)
       scaredGhosts.append(ghost)
     else:
       huntingGhosts.append(ghost)
+
   capsules = currentGameState.getCapsules()
   remainingFood = len(foodAsList)
   remainingCapsules = len(capsules)
   currentScore = currentGameState.getScore()
   distToClosestFood = float("inf")
   invDistanceToClosestFood = 0
+
   for item in foodAsList:
     dist = util.manhattanDistance(currentPacmanPosition, item)
     if dist < distToClosestFood:
@@ -280,41 +291,53 @@ def betterEvaluationFunction(currentGameState: GameState) -> float:
 
   if distToClosestFood > 0:
     invDistanceToClosestFood = 1 / distToClosestFood
+
   if len(foodAsList) < 3:
     invDistanceToClosestFood = 100000
+
   if len(foodAsList) == 1:
     invDistToClosestFood = 500000
+
   distToClosestCapsules = float("inf")
   invDistToClosestCapsule = 0
+
   if remainingCapsules == 0:
     distToClosestCapsules = 0
+
   for item in capsules:
     dist = util.manhattanDistance(currentPacmanPosition, item)
     if dist < distToClosestCapsules:
       distToClosestCapsules = dist
+
   if distToClosestCapsules > 0:
     invDistToClosestCapsule = 1 / distToClosestCapsules
   distToHuntingGhost = float("inf")
+
   for ghost in huntingGhosts:
     dist = util.manhattanDistance(currentPacmanPosition, ghost.getPosition())
     if dist < distToHuntingGhost:
       distToHuntingGhost = dist
+
   if len(scaredGhosts) == 0:
     distToScaredGhost = 0
     scaredTime = 0
   else:
     distToScaredGhost = float("inf")
+
     for ghost in scaredGhosts:
       dist = util.manhattanDistance(currentPacmanPosition, ghost.getPosition())
       if dist < distToScaredGhost:
         distToScaredGhost = dist
     scaredTime = scaredTimes[0]
+
   invDistToHuntingGhost = 0
   if distToHuntingGhost > 0:
     invDistToHuntingGhost = 1.0 / distToHuntingGhost
+
   invDistToScaredGhost = 0
   if distToScaredGhost > 0:
     invDistToScaredGhost = 1.0 / distToScaredGhost
+
   score = currentGameState.getScore() \
           - 2 * invDistToHuntingGhost \
           + 15 * scaredTime * invDistToScaredGhost \
